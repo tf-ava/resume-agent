@@ -1,10 +1,17 @@
+import os
+from dotenv import load_dotenv
+
 import hashlib
 
 from src.resume_agent.redis import redis_client
 from src.resume_agent.schemas import AnalyzeResumeResponse
 
+load_dotenv()
 
-CACHE_TTL_SECONDS = 60 * 2  # 2分钟
+CACHE_TTL_SECONDS = os.getenv(
+    "CACHE_TTL_SECONDS"
+)
+
 
 
 def sha256_bytes(data: bytes) -> str:
