@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { Button, Card, Alert, message, Space, Typography } from "antd";
+import {
+  Alert,
+  Button,
+  Card,
+  Empty,
+  message,
+  Space,
+  Spin,
+  Typography,
+} from "antd";
 
 import { analyzeResume } from "../api/resume";
 import { getApiErrorMessage } from "../api/error";
@@ -8,7 +17,7 @@ import ResumeUpload from "./ResumeUpload";
 import JobDescriptionInput from "./JobDescriptionInput";
 import AnalyzeResult from "./AnalyzeResult";
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 export default function ResumeAnalyzer() {
   const [file, setFile] = useState<File | null>(null);
@@ -46,18 +55,53 @@ export default function ResumeAnalyzer() {
   }
 
   return (
-    <div className="page">
-      <Card>
-        <Space direction="vertical" size="large" style={{ width: "100%" }}>
-          <div>
-            <Title level={2}>简历分析 Agent</Title>
-            <Paragraph type="secondary">
-              上传 PDF 简历并输入岗位描述，系统会分析简历与岗位的匹配度。
-            </Paragraph>
-          </div>
+    <main className="page">
+      <header className="page-header">
+        <div>
+          <Text className="page-kicker">Resume Analysis Agent</Text>
+          <Title level={2} className="page-title">
+            简历智能分析工作台
+          </Title>
+          <Paragraph className="page-description">
+            上传 PDF 简历并输入岗位描述，系统会提取候选人关键信息，并分析简历与岗位的匹配度。
+          </Paragraph>
+        </div>
+      </header>
 
+      <section className="analyzer-layout">
+        <Card className="input-panel" title="分析输入">
+          <Space direction="vertical" size="large" style={{ width: "100%" }}>
+            <div>
+              <Text strong>简历文件</Text>
+              <div className="field-help">仅支持 PDF 格式，建议文件大小不超过 10MB。</div>
+              <ResumeUpload onFileChange={setFile} />
+            </div>
+
+            <div>
+              <Text strong>岗位描述</Text>
+              <div className="field-help">粘贴岗位职责、技术要求、经验要求等 JD 内容。</div>
+              <JobDescriptionInput
+                value={jobDescription}
+                onChange={setJobDescription}
+              />
+            </div>
+
+            <Button
+              type="primary"
+              size="large"
+              loading={loading}
+              onClick={handleAnalyze}
+              block
+            >
+              开始分析
+            </Button>
+          </Space>
+        </Card>
+
+        <div className="result-panel">
           {errorMessage && (
             <Alert
+              className="result-alert"
               type="error"
               message="分析失败"
               description={errorMessage}
@@ -65,25 +109,31 @@ export default function ResumeAnalyzer() {
             />
           )}
 
-          <ResumeUpload onFileChange={setFile} />
+          {loading && (
+            <Card className="result-card">
+              <div className="loading-state">
+                <Spin size="large" />
+                <div>
+                  <Title level={4}>正在分析简历</Title>
+                  <Paragraph type="secondary">
+                    正在解析 PDF、提取关键信息并计算岗位匹配度。
+                  </Paragraph>
+                </div>
+              </div>
+            </Card>
+          )}
 
-          <JobDescriptionInput
-            value={jobDescription}
-            onChange={setJobDescription}
-          />
+          {!loading && !result && !errorMessage && (
+            <Card className="result-card">
+              <Empty
+                description="上传简历并填写岗位描述后，分析结果会显示在这里"
+              />
+            </Card>
+          )}
 
-          <Button
-            type="primary"
-            loading={loading}
-            onClick={handleAnalyze}
-            block
-          >
-            开始分析
-          </Button>
-
-          {result && <AnalyzeResult result={result} />}
-        </Space>
-      </Card>
-    </div>
+          {!loading && result && <AnalyzeResult result={result} />}
+        </div>
+      </section>
+    </main>
   );
 }
